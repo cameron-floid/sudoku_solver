@@ -2,13 +2,13 @@ from Solver import Board
 
 
 board = Board()
-board.print()
+board.display()
 
-solved = board.solve(board.tiles)
+solved = board.solve()
 
 if solved:
-    board.print(title="Solved Board")
+    board.display(title="Solved Board")
 else:
-    board.print(title="Found No Solution")
+    board.display(title="Found No Solution")
 
 

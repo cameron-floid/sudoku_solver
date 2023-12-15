@@ -1,6 +1,13 @@
 class Board:
 
     def __init__(self):
+        """
+        Constructor for the Board class.
+
+        Raises:
+            ValueError: If the entered Sudoku board is not valid.
+        """
+
         self.tiles = [
             [5, 3, 0, 0, 7, 0, 0, 0, 0],
             [6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -14,95 +21,99 @@ class Board:
         ]
 
         if not self.valid_board():
-            print("\nThe Entered Sodoku Board Is Not Valid!\n")
-            exit()
+            raise ValueError("The entered Sudoku board is not valid!")
 
-    def print(self, title: str = "Board"):
+    def display(self, title: str = "Board"):
+        """
+        Display the Sudoku board.
 
+        Args:
+            title (str): Title for the board display.
+        """
         print(f"\n{title}:\n")
 
-        for i in range(len(self.tiles)):
-
+        for i, row in enumerate(self.tiles):
             if not i % 3 == 0 and i != 0:
                 print()
 
             if i % 3 == 0 and i != 0:
                 print("\n- - - - - - - - - - - -")
 
-            for j in range(len(self.tiles[i])):
+            for j, value in enumerate(row):
                 if j % 3 == 0 and j != 0:
                     print(" | ", end="")
-
-                print(self.tiles[i][j], end=" ")
+                print(value, end=" ")
 
         print("\n")
 
     def next_empty_tile(self):
-
         """
-        Returns the next empty tile in the board
-        :return:
+        Find the next empty tile in the Sudoku board.
+
+        Returns:
+            tuple: Coordinates (row, column) of the next empty tile, or None if the board is full.
         """
-
-        for i in range(len(self.tiles)):
-            for j in range(len(self.tiles[i])):
-                if self.tiles[i][j] == 0:
-                    return i, j
-
-        return None
+        return next(((i, j) for i, row in enumerate(self.tiles) for j, value in enumerate(row) if value == 0),
+                    None)
 
     def valid_board(self):
+        """
+        Check if the Sudoku board is valid.
+
+        Returns:
+            bool: True if the board is valid, False otherwise.
+        """
         size = len(self.tiles)
-        for col in self.tiles:
-            if len(col) != size:
-                return False
+        return all(len(col) == size for col in self.tiles)
 
-        return True
+    def valid(self, value: int, position: tuple) -> bool:
+        """
+        Check if placing a value at a specific position is valid.
 
-    def valid(self, board, value: int, position: tuple) -> bool:
+        Args:
+            value (int): The value to be placed.
+            position (tuple): Coordinates (row, column) of the position.
+
+        Returns:
+            bool: True if the placement is valid, False otherwise.
+        """
+        row, col = position
 
         # check row
-        for i in range(len(self.tiles[0])):
-            if self.tiles[position[0]][i] == value and i != position[1]:
-                return False
+        if any(self.tiles[row][i] == value and i != col for i in range(len(self.tiles[0]))):
+            return False
 
         # check the col
-        for i in range(len(self.tiles[0])):
-            if self.tiles[i][position[1]] == value and i != position[0]:
-                return False
+        if any(self.tiles[i][col] == value and i != row for i in range(len(self.tiles[0]))):
+            return False
 
         # check square
-        box_start_row = position[0] // 3 * 3
-        box_start_col = position[1] // 3 * 3
+        box_start_row, box_start_col = row // 3 * 3, col // 3 * 3
 
-        i = box_start_row
-        j = box_start_col
+        return not any(
+            self.tiles[i][j] == value and (i, j) != position for i in range(box_start_row, box_start_row + 3)
+            for j in range(box_start_col, box_start_col + 3))
 
-        while i < box_start_row + 3:
-            while j < box_start_col + 3:
-                if self.tiles[i][j] == value and (i, j) != position:
-                    return False
-                j += 1
-            i += 1
+    def solve(self):
+        """
+        Solve the Sudoku board using backtracking.
 
-        return True
-
-    def solve(self, board):
-
+        Returns:
+            bool: True if a solution is found, False otherwise.
+        """
         next_tile = self.next_empty_tile()
 
         if not next_tile:
             return True
 
         else:
-
             row, col = next_tile
 
             for i in range(1, 10):
-                if self.valid(self.tiles, i, next_tile):
+                if self.valid(i, next_tile):
                     self.tiles[row][col] = i
 
-                    if self.solve(self.tiles):
+                    if self.solve():
                         return True
 
                     self.tiles[row][col] = 0
